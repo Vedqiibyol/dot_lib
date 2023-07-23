@@ -1,6 +1,13 @@
 #ifndef _DOTLIBS_MEM
 #define _DOTLIBS_MEM
 
+#if defined (__kohr_compatibility)
+#define mem(n) n
+#else
+#define mem(n) mem_ ## n
+#endif
+
+
 #include "types.h"
 
 #ifdef _WIN32
@@ -12,14 +19,14 @@
 // static HANDLE __heap = GetProcessHeap();
 #define __heap GetProcessHeap()
 
-void* mem_alloc(u64 size) { return HeapAlloc(__heap, 0, size); }
-void* mem_alloc0(u64 size) { return HeapAlloc(__heap, HEAP_ZERO_MEMORY, size); }
-u64   mem_getsize(void* ptr) { return HeapSize(__heap, 0, ptr); }
-void  mem_free(void* ptr) { HeapFree(__heap, 0, ptr); }
-void* mem_realloc(void* ptr, u64 newsize) { return HeapReAlloc(__heap, 0, ptr, newsize); }
-void* mem_realloc0(void* ptr, u64 newsize) { return HeapReAlloc(__heap, HEAP_ZERO_MEMORY, ptr, newsize); }
-void* mem_expand(void* ptr, u64 inc) { return HeapReAlloc(__heap, 0, ptr, mem_getsize(ptr) + inc); }
-void* mem_shrink(void* ptr, u64 dec) { return HeapReAlloc(__heap, 0, ptr, mem_getsize(ptr) - dec); }
+void* mem(alloc)(u64 size) { return HeapAlloc(__heap, 0, size); }
+void* mem(alloc0)(u64 size) { return HeapAlloc(__heap, HEAP_ZERO_MEMORY, size); }
+u64   mem(getsize)(void* ptr) { return HeapSize(__heap, 0, ptr); }
+void  mem(free)(void* ptr) { HeapFree(__heap, 0, ptr); }
+void* mem(realloc)(void* ptr, u64 newsize) { return HeapReAlloc(__heap, 0, ptr, newsize); }
+void* mem(realloc0)(void* ptr, u64 newsize) { return HeapReAlloc(__heap, HEAP_ZERO_MEMORY, ptr, newsize); }
+void* mem(expand)(void* ptr, u64 inc) { return HeapReAlloc(__heap, 0, ptr, mem_getsize(ptr) + inc); }
+void* mem(shrink)(void* ptr, u64 dec) { return HeapReAlloc(__heap, 0, ptr, mem_getsize(ptr) - dec); }
 
 // void* pub_alloc(u64 size) { return HeapAlloc(__heap, 0, size); }
 // u64   pub_getsize(void* ptr) { return HeapSize(__heap, 0, ptr); }
@@ -46,7 +53,7 @@ void* mem_shrink(void* ptr, u64 dec) { return HeapReAlloc(__heap, 0, ptr, mem_ge
 
 #include <sys/mman.h>
 
-void* mem_alloc(u64 size) {
+void* mem(alloc)(u64 size) {
 	void* ptr = (void*)mmap(0, size+8, PROT_READ | PROT_WRITE,
 		MAP_ANONYMOUS | MAP_PRIVATE | MAP_UNINITIALIZED, -1, 0);
 
@@ -67,7 +74,7 @@ void* mem_alloc(u64 size) {
 	// Thanks Clang, thanks GCC.
 	// *We love it!*
 }
-void* mem_alloc0(u64 size) {
+void* mem(alloc0)(u64 size) {
 	void* ptr = (void*)mmap(0, size+8, PROT_READ | PROT_WRITE,
 		MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 
@@ -88,7 +95,7 @@ void* mem_alloc0(u64 size) {
 	// Thanks Clang, thanks GCC.
 	// *We love it!*
 }
-u64   mem_getsize(void* ptr) {
+u64   mem(getsize)(void* ptr) {
 	u8*  p  =  (u8*)ptr;
 	     p -=       8;
 	u64* s  = (u64*)p;
@@ -101,13 +108,13 @@ u64   mem_getsize(void* ptr) {
 
 	// return false;
 }
-void  mem_free(void* ptr) {
-	u64 s = mem_getsize(ptr);
+void  mem(free)(void* ptr) {
+	u64 s = mem(getsize)(ptr);
 	if (s != -1)
 		munmap(mem - 8, s);
 }
-void* mem_realloc(void* ptr, u64 newsize) {
-	u64 s = mem_getsize(ptr);
+void* mem(realloc)(void* ptr, u64 newsize) {
+	u64 s = mem(getsize)(ptr);
 	if (s != -1) {
 		// u64* pp = (u64*)mremap(mem.realptr, mem.realsize, size+9, MREMAP_MAYMOVE);
 		u64* pp = (u64*)mremap(ptr-8, s+8, newsize +8, MREMAP_MAYMOVE);
@@ -123,67 +130,67 @@ void* mem_realloc(void* ptr, u64 newsize) {
 
 	return nullptr;
 }
-void* mem_realloc0(void* ptr, u64 newsize) {
-	void* ret = mem_realloc(ptr, newsize);
+void* mem(realloc0)(void* ptr, u64 newsize) {
+	void* ret = mem(realloc)(ptr, newsize);
 	if (ret != nullptr) {
 		for (u64 i=0; i < newsize; i++) ret[i] = 0;
 	}
 	return ret;
 }
-void* mem_expand(void* ptr, u64 inc) { return mem_realloc(ptr, mem_getsize(ptr) + inc); }
-void* mem_shrink(void* ptr, u64 dec) { return mem_realloc(ptr, mem_getsize(ptr) - dec); }
+void* mem(expand)(void* ptr, u64 inc) { return mem(realloc)(ptr, mem(getsize)(ptr) + inc); }
+void* mem(shrink)(void* ptr, u64 dec) { return mem(realloc)(ptr, mem(getsize)(ptr) - dec); }
 
 #endif
 
 
-void* mem_copy(void* src, u64 size) {
-	void* ret = (void*)mem_alloc(size);
+void* mem(copy)(void* src, u64 size) {
+	void* ret = (void*)mem(alloc)(size);
 	for(u64 i=0; i<=size; i++)
 		((u8*)ret)[i] = ((u8*)src)[i];
 
 	return ret;
 }
 
-void mem_copy_to_buffer(void* src, void* dst, u64 size) {
+void mem(copy_to_buffer)(void* src, void* dst, u64 size) {
 	for(u64 i=0; i<=size; i++)
 		((u8*)dst)[i] = ((u8*)src)[i];
 }
 
-void mem_fill(void* ptr, u64 length, u8 filler) {
+void mem(fill)(void* ptr, u64 length, u8 filler) {
 	for(u64 i=0; i<=length; i++)
 		((u8*)ptr)[i] = filler;
 }
 
-void mem_shift_to_tail(void* ptr, u64 length, u64 shift) {
+void mem(shift_to_tail)(void* ptr, u64 length, u64 shift) {
 	for(u64 start=0; shift <= length; start++, shift++)
 		((u8*)ptr)[start] = ((u8*)ptr)[shift];
 }
 
-void mem_shift_to_head(void* ptr, u64 length, u64 shift) {
+void mem(shift_to_head)(void* ptr, u64 length, u64 shift) {
 	for(u64 start=length-shift; start; start--, length--)
 		((u8*)ptr)[length] = ((u8*)ptr)[start];
 }
 
 
 #ifndef malloc
-#define malloc mem_alloc
+#define malloc mem(alloc)
 #endif
 #ifndef calloc
-#define calloc mem_alloc0
+#define calloc mem(alloc0)
 #endif
 #ifndef remalloc
-#define remalloc mem_realloc
+#define remalloc mem(realloc)
 #endif
 #ifndef free
-#define free mem_free
+#define free mem(free)
 #endif
 
-// #define pri_alloc    mem_alloc
-// #define pri_getsize  mem_getsize
-// #define pri_free     mem_free
-// #define pri_realloc  mem_realloc
-// #define pri_expand   mem_expand
-// #define pri_shrink   mem_shrink
+// #define pri_alloc    mem(alloc)
+// #define pri_getsize  mem(getsize)
+// #define pri_free     mem(free)
+// #define pri_realloc  mem(realloc)
+// #define pri_expand   mem(expand)
+// #define pri_shrink   mem(shrink)
 
 
 // data

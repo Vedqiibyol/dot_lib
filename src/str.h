@@ -11,14 +11,20 @@
 #define FREEER mem_free
 #endif
 
-u64 str_length(cc str) {
+#if defined (__kohr_compatibility)
+#define str(n) n
+#else
+#define str(n) str_ ## n
+#endif
+
+u64 str(length)(cc str) {
 	char* p = (char*)str;
 	while(*p) p++;
 	return p - str;
 }
 
-char* str_copy(cc src) {
-	char* dest = (char*)ALLOCATOR(str_length(src));
+char* str(copy)(cc src) {
+	char* dest = (char*)ALLOCATOR(str(length)(src));
 	uint i = 0;
 	for(; src[i]; i++)
 		dest[i] = src[i];
@@ -27,7 +33,7 @@ char* str_copy(cc src) {
 	return dest;
 }
 
-u64 str_copy_to_buffer(cc string, char* buffer, u64 size) {
+u64 str(copy_to_buffer)(cc string, char* buffer, u64 size) {
 	uint i = 0;
 	for (; i < size && string[i]; i++) {
 		buffer[i] = string[i];
@@ -35,7 +41,7 @@ u64 str_copy_to_buffer(cc string, char* buffer, u64 size) {
 	return i;
 }
 
-bool str_equal(cc str1, cc str2) {
+bool str(equal)(cc str1, cc str2) {
 	for (; *str1 == *str2; str1++, str2++) {
 		if (!*str1)
 			return true;
@@ -43,7 +49,7 @@ bool str_equal(cc str1, cc str2) {
 
 	return false;
 }
-bool str_inferior(cc str1, cc str2) {
+bool str(inferior)(cc str1, cc str2) {
 	for (; ; str1++, str2++) { // // *str1 && *str2
 		if (!*str1 && !*str2) return false;
 		if (*str1 == *str2) continue;
@@ -51,7 +57,7 @@ bool str_inferior(cc str1, cc str2) {
 	}
 	return false;
 }
-bool str_superior(cc str1, cc str2) {
+bool str(superior)(cc str1, cc str2) {
 	bool ret = false;
 	for (; *str1 == *str2; str1++, str2++) { // // *str1 && *str2
 		if (!*str1 && !*str2) return false;
@@ -60,7 +66,7 @@ bool str_superior(cc str1, cc str2) {
 	return ret;
 }
 
-int str_compare(cc str1, cc str2) {
+int str(compare)(cc str1, cc str2) {
 	int ret = 0;
 	for (; *str1 && !ret; str1++, str2++) { //  && str2[i]
 		ret = *str1 - *str2;
@@ -68,16 +74,16 @@ int str_compare(cc str1, cc str2) {
 	return ret;
 }
 
-uint char_is_in(char ch, cc str) {
+uint str(has)(char ch, cc str) {
 	for (uint i=0; str[i]; i++)
 		if (str[i] == ch) return i;
 	return -1;
 }
 
-// uint str_upper(char* string);
-// uint str_lower(char* string);
+// uint str(upper)(char* string);
+// uint str(lower)(char* string);
 
-uint str_find(cc string, cc target) {
+uint str(find)(cc string, cc target) {
 	for(uint i=0; string[i]; i++) {
 		uint j=0;
 		for (; target[j] && string[i]; j++, i++) {
@@ -86,7 +92,7 @@ uint str_find(cc string, cc target) {
 	}
 	return -1;
 }
-uint str_rfind(cc string, cc target) {
+uint str(rfind)(cc string, cc target) {
 	char* p1 = (char*)string; char* p2 = (char*)target;
 	while (*p1) p1++; while (*p2) p2++;
 	p1--; p2 -= (u64)target+1;
@@ -100,13 +106,13 @@ uint str_rfind(cc string, cc target) {
 	return -1;
 }
 
-bool str_starts_with(cc string, cc target) {
+bool str(starts_with)(cc string, cc target) {
 	for(; *target; string++, target++)
 		if (!*string || *string != *target) return false;
 	return true;
 }
 
-bool str_ends_with(cc string, cc target) {
+bool str(ends_with)(cc string, cc target) {
 	char* p1 = (char*)string; char* p2 = (char*)target;
 	while (*p1) p1++; while (*p2) p2++;
 
@@ -115,14 +121,14 @@ bool str_ends_with(cc string, cc target) {
 	return true;
 }
 
-uint str_count(cc string, cc target) {
+uint str(count)(cc string, cc target) {
 	uint c = 0;
 	for(; *string; string++)
-		if (str_starts_with(string, target)) c++;
+		if (str(starts_with)(string, target)) c++;
 	return c;
 }
 
-uint s64_to_string(s64 value, char* buffer, uint buflen, uint base,
+uint str(from_s64)(s64 value, char* buffer, uint buflen, uint base,
 	char minus_sign, char plus_sign, char guide_char, uint guide_freq) {
 	bool neg = (value < 0); if (neg) value = -value;
 	s64 a = value; uint c = 0; uint len = 0;
@@ -148,7 +154,7 @@ uint s64_to_string(s64 value, char* buffer, uint buflen, uint base,
 
 	return a;
 }
-uint u64_to_string(u64 value, char* buffer, uint buflen, uint base,
+uint str(from_u64)(u64 value, char* buffer, uint buflen, uint base,
 	char guide_char, uint guide_freq) {
 	u64 a = value; uint c = 0; uint len = 0;
 	do len++; while (a /= base);
@@ -169,7 +175,7 @@ uint u64_to_string(u64 value, char* buffer, uint buflen, uint base,
 
 	return a;
 }
-uint f64_to_string(f64 value, char* buffer, uint buflen, uint base, 
+uint str(from_f64)(f64 value, char* buffer, uint buflen, uint base, 
 	char minus_sign, char plus_sign, char separator, char guide_char, uint guide_freq) {
 	bool neg = (value < 0); if (neg) value = -value;
 	f64 _ = value; uint c = 0; uint len = 0; uint a = 0; uint p = 0;
@@ -207,8 +213,8 @@ uint f64_to_string(f64 value, char* buffer, uint buflen, uint base,
 }
 
 
-s64 str_to_s64(cc string, uint base, char minus_sign) {
-	uint len = str_length(string);
+s64 str(to_s64)(cc string, uint base, char minus_sign) {
+	uint len = str(length)(string);
 	s64 value = 0;
 	s64 m = 1;
 
@@ -230,8 +236,8 @@ s64 str_to_s64(cc string, uint base, char minus_sign) {
 
 	return value * m;
 }
-u64 str_to_u64(cc string, uint base) {
-	uint len = str_length(string);
+u64 str(to_u64)(cc string, uint base) {
+	uint len = str(length)(string);
 	u64 value = 0;
 
 	uint p = 1;
@@ -250,8 +256,8 @@ u64 str_to_u64(cc string, uint base) {
 
 	return value;
 }
-f64 str_to_f64(cc string, uint base, char minus_sign, char separator) {
-	uint len = str_length(string);
+f64 str(to_f64)(cc string, uint base, char minus_sign, char separator) {
+	uint len = str(length)(string);
 	f64 m = 1;
 	f64 value = 0.0f;
 
@@ -275,7 +281,7 @@ f64 str_to_f64(cc string, uint base, char minus_sign, char separator) {
 	return (value / dec) * m;
 }
 
-uint s64_to_string_le(s64 value, char* buffer, uint buflen, uint base,
+uint str(from_s64_le)(s64 value, char* buffer, uint buflen, uint base,
 	char minus_sign, char plus_sign, char guide_char, uint guide_freq) {
 	u64 i = 0; uint c = 0;
 	if (value < 0) {
@@ -300,7 +306,7 @@ uint s64_to_string_le(s64 value, char* buffer, uint buflen, uint base,
 	buffer[i++] = 0;
 	return i;
 }
-uint u64_to_string_le(u64 value, char* buffer, uint buflen, uint base,
+uint str(from_u64_le)(u64 value, char* buffer, uint buflen, uint base,
 	char guide_char, uint guide_freq) {
 	u64 i = 0; uint c = 0;
 
@@ -318,7 +324,7 @@ uint u64_to_string_le(u64 value, char* buffer, uint buflen, uint base,
 	buffer[i++] = 0;
 	return i;
 }
-uint f64_to_string_le(f64 value, char* buffer, uint buflen, uint base,
+uint str(from_f64_le)(f64 value, char* buffer, uint buflen, uint base,
 	char minus_sign, char plus_sign, char separator, char guide_char, uint guide_freq) {
 	u64 i = 0; uint c = 0;
 	if (value < 0) {
@@ -355,7 +361,7 @@ uint f64_to_string_le(f64 value, char* buffer, uint buflen, uint base,
 	return i;
 }
 
-s64 str_to_s64_le(cc string, uint base, char minus_sign) {
+s64 str(to_s64_le)(cc string, uint base, char minus_sign) {
 	s64 value = 0;
 	s64 m = 1;
 
@@ -378,7 +384,7 @@ s64 str_to_s64_le(cc string, uint base, char minus_sign) {
 	return value * m;
 }
 
-u64 str_to_u64_le(cc string, uint base) {
+u64 str(to_u64_le)(cc string, uint base) {
 	u64 value = 0;
 
 	uint p = 1;
@@ -397,7 +403,7 @@ u64 str_to_u64_le(cc string, uint base) {
 
 	return value;
 }
-f64 str_to_f64_le(cc string, uint base, char minus_sign, char plus_sign, char separator) {
+f64 str(to_f64_le)(cc string, uint base, char minus_sign, char plus_sign, char separator) {
 	f64 m = 1;
 	f64 value = 0.0f;
 

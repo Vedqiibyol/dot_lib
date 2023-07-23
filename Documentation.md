@@ -163,6 +163,29 @@ The header also has five other functions for memory manipulation
 - `mem_shift_to_head` offers the same behaviour as the function above but
 	shofts the data towards the start of the buffer (the head).
 
+## `print.h`
+
+This header, though not yet finished, provides a set of four functions ready to
+use that use a special formating, similar (if not the same) as `printf`, common
+on most UNIX-like systems. These functions are `print`, `println`, `printerr`
+and lastly `printlnerr`. The two first ones output text on the standard output
+(`stdout`) and the last two on the standard error output (`stderr`).
+
+All the functions take in parameter a string, with a special formating and 0 or
+more arguments of any type. The formating works like `printf`'s formating: each
+percent `%` and 1 to 3 letter indicate the type and thereof the position of the
+argument encountered, such that, the first percent will use the first next
+argument, the second percent will use the the next second argument, etc. The 1
+to 3 letters indicate the type of the argument, `c` for a single character
+(`char`), `s` for a string of character (`cc`), `b` and `B` for a boolean (the
+latter prints yes or no), `p` for a pointer (will print its address in
+hexadecimal). `u` for an unsigned integer (`uint`), `d` and `i` for a signed
+integer (`int`), and `f` for a floating point unit (`float`). For the three last
+types, `l` promotes the type to its 64 bit variant. Except for `f`; `h` promotes
+the type to its 16 bit variant, and `hh` to its 8 bit variant.
+
+`println` and `printlnerr` will append a line jump at the end of the string.
+
 ## `str.h` String manipulatin
 
 This header contains functions dedicated to manipulate strings, here are the
@@ -184,7 +207,7 @@ following functions
 - `str_compare` returns the difference between the first string and the second;
 	0 if the two strings are equal, a value inferior to 0 if the first string
 	is inferior, a value above 0 otherwise.
-- `char_is_in` takes in parameter one character and a string, and returns the
+- `str_has` takes in parameter one character and a string, and returns the
 	position of the character in the string.
 <!-- - `str_upper` takes in parameter a single string of character, and puts all
 	characters to their uppercase variant if any.
@@ -206,9 +229,9 @@ following functions
 
 ### String converstion
 
-`s64_to_string`, `u64_to_string` and `f64_to_string` all take a value as
+`str_from_s64`, `str_from_u64` and `str_from_f64` all take a value as
 indicated by the first word of their name, and take the minus sign and positive
-sign (only for `s64_to_string` and `f64_to_string`) which can both be ommited if
+sign (only for `str_from_s64` and `str_from_f64`) which can both be ommited if
 they are not wanted, a character that may be used as a reading guide and the
 frequency at which given guide is suppose to appear. If the guide not provided,
 or the frequency is 0, it will not be added. The function fills the buffer with

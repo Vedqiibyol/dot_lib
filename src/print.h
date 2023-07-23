@@ -96,18 +96,18 @@ void dformat_ref(void(*_puts)(cc, uint), void* ref) {
 }
 void dformat_uints(void(*_puts)(cc, uint), u64 value) {
 	char buf[65] = {0};
-	u64_to_string(value, buf, 65, 10, 0, 0);
+	str_from_u64(value, buf, 65, 10, 0, 0);
 	_puts(buf, -1);
 }
 void dformat_ints(void(*_puts)(cc, uint), s64 value) {
 	char buf[66] = {0};
-	s64_to_string(value, buf, 66, 10, '-', 0, 0, 0);
+	str_from_s64(value, buf, 66, 10, '-', 0, 0, 0);
 	_puts(buf, -1);
 }
 void dformat_floats(void(*_puts)(cc, uint), f64 value) {
 	// char buf[512] = {0};
 	char buf[512] = {0};
-	f64_to_string(value, buf, 512, 10, '-', 0, '.', 0, 0);
+	str_from_f64(value, buf, 512, 10, '-', 0, '.', 0, 0);
 	_puts(buf, -1);
 }
 
