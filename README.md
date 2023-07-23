@@ -1,4 +1,4 @@
-# .Libs
+# dot_lib
 
 A collection of STB-like header files for C, made in pure C. ~~there's no C++,
 whatever Github says~~
